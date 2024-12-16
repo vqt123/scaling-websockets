@@ -1,7 +1,12 @@
 import { Server, Socket } from "socket.io";
 import { createChatroom } from "./chatroom";
 
-const io = new Server();
+const io = new Server({
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"],
+  },
+});
 const chatroom = createChatroom();
 const socketToUsername = new Map<string, string>();
 
@@ -38,6 +43,8 @@ io.on("connection", (socket) => {
       socketToUsername.set(socket.id, username);
       const userList = chatroom.addUser(username);
       io.emit("user-joined", { username, userList });
+      const messages = chatroom.getAllMessages();
+      socket.emit("chat-messages", messages);
     } else {
       const username = socketToUsername.get(socket.id);
       if (!username) {
